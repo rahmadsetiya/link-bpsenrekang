@@ -5,8 +5,19 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { config } from '@inertiajs/vue3'
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+// Set a single value using dot notation...
+config.set('form.recentlySuccessfulDuration', 1000)
+config.set('prefetch.cacheFor', '5m')
+
+// Set multiple values at once...
+config.set({
+    'form.recentlySuccessfulDuration': 1000,
+    'prefetch.cacheFor': '5m',
+})
+
+const appName = import.meta.env.VITE_APP_NAME || 'LINKANG';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -23,5 +34,27 @@ createInertiaApp({
     },
     progress: {
         color: '#4B5563',
+    },
+    defaults: {
+        form: {
+            recentlySuccessfulDuration: 5000,
+        },
+        prefetch: {
+            cacheFor: "1m",
+            hoverDelay: 150,
+        },
+        visitOptions: (href, options) => {
+            return {
+                headers: {
+                    ...options.headers,
+                    "X-Custom-Header": "value",
+                },
+            };
+        },
+        defaults: {
+            future: {
+                useScriptElementForInitialPage: true,
+            },
+        },
     },
 });
