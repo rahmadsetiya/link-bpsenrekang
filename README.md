@@ -1,59 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Link BPS Enrekang
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A web application built with **Laravel 12**, **Inertia.js**, **Vue 3**, and **Tailwind CSS**.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Layer | Technology |
+|---|---|
+| Backend | PHP 8.2+, Laravel 12 |
+| Frontend | Vue 3, Inertia.js |
+| Styling | Tailwind CSS |
+| Build Tool | Vite 7 |
+| Database | MySQL |
+| Auth | Laravel Breeze |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+Make sure you have the following installed before starting:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **PHP** >= 8.2
+- **Composer** >= 2.x
+- **Node.js** >= 18.x & **npm** >= 9.x
+- **MySQL** (via Laragon or any local server)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Installation & Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Clone the repository
 
-### Premium Partners
+```bash
+git clone <repository-url> link-bpsenrekang
+cd link-bpsenrekang
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Install PHP dependencies
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Set up environment file
 
-## Code of Conduct
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Configure the database
 
-## Security Vulnerabilities
+Open `.env` and update the database credentials:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=link_bpsenrekang
+DB_USERNAME=root
+DB_PASSWORD=root
+```
 
-## License
+### 5. Run database migrations
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan migrate
+```
+
+### 6. Install Node.js dependencies
+
+```bash
+npm install --legacy-peer-deps
+```
+
+> `--legacy-peer-deps` is required because `@vitejs/plugin-vue` has not yet declared official support for Vite 7.
+
+---
+
+## Running the App
+
+You need **two servers running at the same time** — one for Laravel (backend) and one for Vite (frontend assets).
+
+### Option A — Run everything with one command (recommended)
+
+```bash
+composer dev
+```
+
+This starts Laravel, Vite, queue worker, and log watcher all at once using `concurrently`.
+
+### Option B — Run manually in separate terminals
+
+**Terminal 1 — Laravel server:**
+```bash
+php artisan serve
+```
+
+**Terminal 2 — Vite dev server:**
+```bash
+npm run dev
+```
+
+Then open your browser and go to:
+```
+http://127.0.0.1:8000
+```
+
+> Do **not** open `http://localhost:5173` — that is Vite's internal asset server, not the app.
+
+---
+
+## Building for Production
+
+```bash
+npm run build
+```
+
+This compiles and minifies all frontend assets into the `public/build/` directory.
+
+---
+
+## Project Structure
+
+```
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/       # Laravel controllers
+│   │   └── Middleware/
+│   └── Models/                # Eloquent models
+├── database/
+│   └── migrations/            # Database migrations
+├── resources/
+│   ├── css/
+│   │   └── app.css            # Global styles (Tailwind)
+│   └── js/
+│       ├── app.js             # Frontend entry point
+│       ├── Pages/             # Vue page components (views)
+│       ├── Layouts/           # Shared page layouts
+│       └── Components/        # Reusable UI components
+├── routes/
+│   ├── web.php                # Web routes
+│   └── auth.php               # Auth routes
+└── vite.config.js             # Vite configuration
+```
+
+---
+
+## Adding a New Page
+
+**1. Create a Vue file** in `resources/js/Pages/`, e.g. `resources/js/Pages/About.vue`:
+
+```vue
+<script setup>
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head } from '@inertiajs/vue3';
+</script>
+
+<template>
+    <Head title="About" />
+    <AuthenticatedLayout>
+        <div class="p-6">About page content here.</div>
+    </AuthenticatedLayout>
+</template>
+```
+
+**2. Add a route** in `routes/web.php`:
+
+```php
+Route::get('/about', function () {
+    return Inertia::render('About');
+});
+```
+
+The string passed to `Inertia::render()` maps directly to the file path inside `resources/js/Pages/`.
+
+---
+
+## Common Commands
+
+| Command | Description |
+|---|---|
+| `php artisan migrate` | Run database migrations |
+| `php artisan migrate:fresh` | Drop all tables and re-run migrations |
+| `php artisan make:model Foo -mcr` | Create model, migration, and controller |
+| `php artisan route:list` | List all registered routes |
+| `npm run dev` | Start Vite dev server with HMR |
+| `npm run build` | Build frontend assets for production |
+| `composer dev` | Start all dev servers at once |
