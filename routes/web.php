@@ -35,7 +35,7 @@ Route::get('/', function () {
         'years' => $years,
         'tags' => $tags,
     ]);
-});
+})->name('home');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

@@ -25,6 +25,15 @@ const { isDark, toggle } = useDarkMode();
                         <!-- Nav Links -->
                         <div class="hidden sm:flex sm:gap-1">
                             <Link
+                                :href="route('home')"
+                                class="rounded-lg px-3 py-1.5 text-xs font-medium transition"
+                                :class="route().current('home')
+                                    ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'"
+                            >
+                                Home
+                            </Link>
+                            <Link
                                 :href="route('dashboard')"
                                 class="rounded-lg px-3 py-1.5 text-xs font-medium transition"
                                 :class="route().current('dashboard')
