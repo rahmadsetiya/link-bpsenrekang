@@ -10,121 +10,138 @@ use Inertia\Inertia;
 
 class LinkController extends Controller
 {
-    public function index()
-    {
-        $links = Link::with('tags')
-            ->latest()
-            ->get()
-            ->map(fn($link) => [
-                'id' => $link->id,
-                'name' => $link->name,
-                'url' => $link->url,
-                'year' => $link->year,
-                'is_active' => $link->is_active,
-                'tags' => $link->tags->map(fn($t) => ['id' => $t->id, 'name' => $t->name]),
-            ]);
+  public function index(Request $request)
+  {
+    $search = $request->query('search', '');
+    $page = $request->query('page', 1);
+    $perPage = 10;
 
-        $tags = Tag::orderBy('name')->get(['id', 'name']);
+    $query = Link::with('tags')->latest();
 
-        return Inertia::render('Dashboard/Links/Index', [
-            'links' => $links,
-            'tags' => $tags,
-        ]);
+    if ($search) {
+      $query->where('name', 'like', "%{$search}%")
+        ->orWhere('url', 'like', "%{$search}%");
     }
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'url' => 'required|url|max:2048|unique:links,url',
-            'year' => 'nullable|integer|min:2000|max:2100',
-            'is_active' => 'boolean',
-            'tag_ids' => 'array',
-            'tag_ids.*' => 'exists:tags,id',
-        ]);
+    $total = $query->count();
+    $links = $query->offset(($page - 1) * $perPage)
+      ->limit($perPage)
+      ->get()
+      ->map(fn($link) => [
+        'id' => $link->id,
+        'name' => $link->name,
+        'url' => $link->url,
+        'year' => $link->year,
+        'is_active' => $link->is_active,
+        'tags' => $link->tags->map(fn($t) => ['id' => $t->id, 'name' => $t->name]),
+      ]);
 
-        $link = Link::create([
-            'name' => $data['name'],
-            'url' => $data['url'],
-            'year' => $data['year'] ?? null,
-            'is_active' => $data['is_active'] ?? true,
-        ]);
+    $tags = Tag::orderBy('name')->get(['id', 'name']);
 
-        if (!empty($data['tag_ids'])) {
-            $link->tags()->sync($data['tag_ids']);
-        }
+    return Inertia::render('Dashboard/Links/Index', [
+      'links' => $links,
+      'tags' => $tags,
+      'search' => $search,
+      'page' => $page,
+      'total' => $total,
+      'perPage' => $perPage,
+      'totalPages' => ceil($total / $perPage),
+    ]);
+  }
 
-        return back();
+  public function store(Request $request)
+  {
+    $data = $request->validate([
+      'name' => 'required|string|max:255',
+      'url' => 'required|url|max:2048|unique:links,url',
+      'year' => 'nullable|integer|min:2000|max:2100',
+      'is_active' => 'boolean',
+      'tag_ids' => 'array',
+      'tag_ids.*' => 'exists:tags,id',
+    ]);
+
+    $link = Link::create([
+      'name' => $data['name'],
+      'url' => $data['url'],
+      'year' => $data['year'] ?? null,
+      'is_active' => $data['is_active'] ?? true,
+    ]);
+
+    if (!empty($data['tag_ids'])) {
+      $link->tags()->sync($data['tag_ids']);
     }
 
-    public function update(Request $request, Link $link)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'url' => 'required|url|max:2048|unique:links,url,' . $link->id,
-            'year' => 'nullable|integer|min:2000|max:2100',
-            'is_active' => 'boolean',
-            'tag_ids' => 'array',
-            'tag_ids.*' => 'exists:tags,id',
-        ]);
+    return back();
+  }
 
-        $link->update([
-            'name' => $data['name'],
-            'url' => $data['url'],
-            'year' => $data['year'] ?? null,
-            'is_active' => $data['is_active'] ?? $link->is_active,
-        ]);
+  public function update(Request $request, Link $link)
+  {
+    $data = $request->validate([
+      'name' => 'required|string|max:255',
+      'url' => 'required|url|max:2048|unique:links,url,' . $link->id,
+      'year' => 'nullable|integer|min:2000|max:2100',
+      'is_active' => 'boolean',
+      'tag_ids' => 'array',
+      'tag_ids.*' => 'exists:tags,id',
+    ]);
 
-        $link->tags()->sync($data['tag_ids'] ?? []);
+    $link->update([
+      'name' => $data['name'],
+      'url' => $data['url'],
+      'year' => $data['year'] ?? null,
+      'is_active' => $data['is_active'] ?? $link->is_active,
+    ]);
 
-        return back();
+    $link->tags()->sync($data['tag_ids'] ?? []);
+
+    return back();
+  }
+
+  public function destroy(Link $link)
+  {
+    $link->delete();
+    return back();
+  }
+
+  public function bulkDestroy(Request $request)
+  {
+    $request->validate([
+      'ids' => 'required|array',
+      'ids.*' => 'exists:links,id',
+    ]);
+
+    Link::whereIn('id', $request->ids)->delete();
+
+    return back();
+  }
+
+  public function bulkUpdate(Request $request)
+  {
+    $request->validate([
+      'ids' => 'required|array',
+      'ids.*' => 'exists:links,id',
+      'year' => 'nullable|integer|min:2000|max:2100',
+      'tag_ids' => 'nullable|array',
+      'tag_ids.*' => 'exists:tags,id',
+      'is_active' => 'nullable|boolean',
+    ]);
+
+    $links = Link::whereIn('id', $request->ids)->get();
+
+    foreach ($links as $link) {
+      if ($request->has('year')) {
+        $link->year = $request->year;
+        $link->save();
+      }
+      if ($request->has('is_active')) {
+        $link->is_active = $request->is_active;
+        $link->save();
+      }
+      if ($request->has('tag_ids')) {
+        $link->tags()->sync($request->tag_ids);
+      }
     }
 
-    public function destroy(Link $link)
-    {
-        $link->delete();
-        return back();
-    }
-
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:links,id',
-        ]);
-
-        Link::whereIn('id', $request->ids)->delete();
-
-        return back();
-    }
-
-    public function bulkUpdate(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:links,id',
-            'year' => 'nullable|integer|min:2000|max:2100',
-            'tag_ids' => 'nullable|array',
-            'tag_ids.*' => 'exists:tags,id',
-            'is_active' => 'nullable|boolean',
-        ]);
-
-        $links = Link::whereIn('id', $request->ids)->get();
-
-        foreach ($links as $link) {
-            if ($request->has('year')) {
-                $link->year = $request->year;
-                $link->save();
-            }
-            if ($request->has('is_active')) {
-                $link->is_active = $request->is_active;
-                $link->save();
-            }
-            if ($request->has('tag_ids')) {
-                $link->tags()->sync($request->tag_ids);
-            }
-        }
-
-        return back();
-    }
+    return back();
+  }
 }
