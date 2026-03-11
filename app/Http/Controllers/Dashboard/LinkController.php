@@ -36,7 +36,7 @@ class LinkController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'url' => 'required|url|max:2048',
+            'url' => 'required|url|max:2048|unique:links,url',
             'year' => 'nullable|integer|min:2000|max:2100',
             'is_active' => 'boolean',
             'tag_ids' => 'array',
@@ -61,7 +61,7 @@ class LinkController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'url' => 'required|url|max:2048',
+            'url' => 'required|url|max:2048|unique:links,url,' . $link->id,
             'year' => 'nullable|integer|min:2000|max:2100',
             'is_active' => 'boolean',
             'tag_ids' => 'array',
