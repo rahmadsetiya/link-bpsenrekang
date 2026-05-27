@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import LinkCard from '@/Components/LinkCard.vue';
 import { useDarkMode } from '@/Composables/useDarkMode';
@@ -16,6 +16,8 @@ const { isDark, toggle } = useDarkMode();
 const selectedYears = ref([]);
 const selectedTags = ref([]);
 const search = ref('');
+const currentPage = ref(1);
+const perPage = 12;
 
 function toggleYear(year) {
     const idx = selectedYears.value.indexOf(year);
@@ -52,6 +54,28 @@ const filteredLinks = computed(() => {
         return matchYear && matchTag && matchSearch;
     });
 });
+
+const totalPages = computed(() => Math.ceil(filteredLinks.value.length / perPage));
+
+const paginatedLinks = computed(() => {
+    const start = (currentPage.value - 1) * perPage;
+    return filteredLinks.value.slice(start, start + perPage);
+});
+
+const pageNumbers = computed(() => {
+    const total = totalPages.value;
+    const cur = currentPage.value;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages = new Set([1, total, cur, cur - 1, cur + 1]);
+    return [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+});
+
+watch(filteredLinks, () => { currentPage.value = 1; });
+
+function goTo(page) {
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 </script>
 
 <template>
@@ -166,14 +190,49 @@ const filteredLinks = computed(() => {
                 class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
                 <LinkCard
-                    v-for="link in filteredLinks"
+                    v-for="link in paginatedLinks"
                     :key="link.id"
                     :link="link"
                 />
             </div>
 
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-1">
+                <button
+                    @click="goTo(currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-800"
+                >
+                    &lsaquo;
+                </button>
+
+                <template v-for="(page, i) in pageNumbers" :key="page">
+                    <span
+                        v-if="i > 0 && page - pageNumbers[i - 1] > 1"
+                        class="px-1 text-sm text-gray-300 dark:text-gray-600"
+                    >…</span>
+                    <button
+                        @click="goTo(page)"
+                        class="rounded-lg border px-3 py-1.5 text-sm font-medium transition"
+                        :class="page === currentPage
+                            ? 'border-blue-500 bg-blue-500 text-white'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-blue-700'"
+                    >
+                        {{ page }}
+                    </button>
+                </template>
+
+                <button
+                    @click="goTo(currentPage + 1)"
+                    :disabled="currentPage === totalPages"
+                    class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-800"
+                >
+                    &rsaquo;
+                </button>
+            </div>
+
             <!-- Empty State -->
-            <div v-else class="flex flex-col items-center justify-center py-24 text-center">
+            <div v-else-if="filteredLinks.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
                 <svg class="mb-3 h-10 w-10 text-gray-300 dark:text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
