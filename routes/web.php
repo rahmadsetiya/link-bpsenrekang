@@ -13,12 +13,12 @@ Route::get('/', function () {
         ->where('is_active', true)
         ->latest()
         ->get()
-        ->map(fn($link) => [
+        ->map(fn ($link) => [
             'id' => $link->id,
             'name' => $link->name,
             'url' => $link->url,
             'year' => $link->year,
-            'tags' => $link->tags->map(fn($t) => ['id' => $t->id, 'name' => $t->name]),
+            'tags' => $link->tags->map(fn ($t) => ['id' => $t->id, 'name' => $t->name]),
         ]);
 
     $years = Link::where('is_active', true)

@@ -9,59 +9,60 @@ use Inertia\Inertia;
 
 class TagController extends Controller
 {
-  public function index(Request $request)
-  {
-    $search = $request->query('search', '');
-    $page = $request->query('page', 1);
-    $perPage = 10;
+    public function index(Request $request)
+    {
+        $search = $request->query('search', '');
+        $page = $request->query('page', 1);
+        $perPage = 10;
 
-    $query = Tag::withCount('links');
+        $query = Tag::withCount('links');
 
-    if ($search) {
-      $query->where('name', 'like', "%{$search}%");
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $total = $query->count();
+        $tags = $query->orderBy('name')
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get(['id', 'name', 'slug']);
+
+        return Inertia::render('Dashboard/Tags/Index', [
+            'tags' => $tags,
+            'search' => $search,
+            'page' => $page,
+            'total' => $total,
+            'perPage' => $perPage,
+            'totalPages' => ceil($total / $perPage),
+        ]);
     }
 
-    $total = $query->count();
-    $tags = $query->orderBy('name')
-      ->offset(($page - 1) * $perPage)
-      ->limit($perPage)
-      ->get(['id', 'name', 'slug']);
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100|unique:tags,name',
+        ]);
 
-    return Inertia::render('Dashboard/Tags/Index', [
-      'tags' => $tags,
-      'search' => $search,
-      'page' => $page,
-      'total' => $total,
-      'perPage' => $perPage,
-      'totalPages' => ceil($total / $perPage),
-    ]);
-  }
+        Tag::create(['name' => $data['name']]);
 
-  public function store(Request $request)
-  {
-    $data = $request->validate([
-      'name' => 'required|string|max:100|unique:tags,name',
-    ]);
+        return back();
+    }
 
-    Tag::create(['name' => $data['name']]);
+    public function update(Request $request, Tag $tag)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100|unique:tags,name,'.$tag->id,
+        ]);
 
-    return back();
-  }
+        $tag->update(['name' => $data['name']]);
 
-  public function update(Request $request, Tag $tag)
-  {
-    $data = $request->validate([
-      'name' => 'required|string|max:100|unique:tags,name,' . $tag->id,
-    ]);
+        return back();
+    }
 
-    $tag->update(['name' => $data['name']]);
+    public function destroy(Tag $tag)
+    {
+        $tag->delete();
 
-    return back();
-  }
-
-  public function destroy(Tag $tag)
-  {
-    $tag->delete();
-    return back();
-  }
+        return back();
+    }
 }
