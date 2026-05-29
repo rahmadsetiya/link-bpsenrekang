@@ -13,6 +13,10 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # Handle X-Inertia Header (pass through to PHP)
+    RewriteCond %{HTTP:X-Inertia} .
+    RewriteRule .* - [E=HTTP_X_INERTIA:%{HTTP:X-Inertia},E=IS_INERTIA_REQUEST:1]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
@@ -22,4 +26,9 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Ensure X-Inertia response header is set for Inertia navigation requests
+<IfModule mod_headers.c>
+    Header always set X-Inertia "true" env=IS_INERTIA_REQUEST
 </IfModule>
