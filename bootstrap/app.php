@@ -22,6 +22,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         //
     })->create();
 
-$app->usePublicPath('/home/enrekangstat7300/public_html/link.enrekang.stat7300.net');
+if (env('APP_ENV') === 'production') {
+    $app->usePublicPath('/home/enrekangstat7300/public_html/link.enrekang.stat7300.net');
+}
 
 return $app;
